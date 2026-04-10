@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Mini Valorant FPS</title>
+<style>
+body { margin:0; overflow:hidden; }
+#hud {
+  position:absolute;
+  color:white;
+  font-family:Arial;
+  top:10px;
+  left:10px;
+}
+#crosshair {
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:10px;
+  height:10px;
+  background:red;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+}
+</style>
+</head>
+<body>
+<div id="hud">HP: 100 | Enemy: Alive</div>
+<div id="crosshair"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+let renderer = new THREE.WebGLRenderer();
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Floor
+let floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(200,200),
+  new THREE.MeshBasicMaterial({color:0x222222})
+);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
+
+// Enemy
+let enemy = new THREE.Mesh(
+  new THREE.BoxGeometry(2,2,2),
+  new THREE.MeshBasicMaterial({color:"red"})
+);
+enemy.position.set(0,1,-20);
+scene.add(enemy);
+
+// Player
+camera.position.y = 2;
+let hp = 100;
+
+// Controls
+let keys = {};
+document.addEventListener("keydown",e=>keys[e.key]=true);
+document.addEventListener("keyup",e=>keys[e.key]=false);
+
+// Mouse look
+document.addEventListener("mousemove",(e)=>{
+  camera.rotation.y -= e.movementX * 0.002;
+});
+
+// Shooting
+document.addEventListener("click",()=>{
+  let ray = new THREE.Raycaster();
+  ray.setFromCamera({x:0,y:0},camera);
+
+  let hit = ray.intersectObject(enemy);
+
+  if(hit.length>0){
+    enemy.material.color.set("green");
+    document.getElementById("hud").innerText = "HP: 100 | Enemy: Killed";
+    setTimeout(()=>{
+      enemy.position.z = -100;
+    },300);
+  }
+});
+
+// Movement
+function move(){
+  if(keys["w"]) camera.position.z -= 0.15;
+  if(keys["s"]) camera.position.z += 0.15;
+  if(keys["a"]) camera.position.x -= 0.15;
+  if(keys["d"]) camera.position.x += 0.15;
+}
+
+// Loop
+function animate(){
+  requestAnimationFrame(animate);
+  move();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
